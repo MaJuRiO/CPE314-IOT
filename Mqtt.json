@@ -1,0 +1,290 @@
+[
+    {
+        "id": "f0294b894a90b4d7",
+        "type": "tab",
+        "label": "IoT, Hivemq and Database",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "d64aa123dd89d982",
+        "type": "mqtt out",
+        "z": "f0294b894a90b4d7",
+        "name": "Hivemq Broker",
+        "topic": "PC/pub1",
+        "qos": "0",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "d17c3dc1cf4d3d03",
+        "x": 680,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "ebaecfe300795f80",
+        "type": "debug",
+        "z": "f0294b894a90b4d7",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 400,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "dd623532f322b91f",
+        "type": "function",
+        "z": "f0294b894a90b4d7",
+        "name": "input_data",
+        "func": "var minThermalArray = 5;\nvar maxThermalArray = 60;\nvar minHumidity = 0;\nvar maxHumidity = 100;\nvar minTemperature = 0;\nvar maxTemperature = 90;\nvar rows = 24;\nvar cols = 32;\nconst nodeID = 2\n// create the 2D array to store temperature readings\nvar tempArray = new Array(rows);\nfor (var i = 0; i < rows; i++) {\n    tempArray[i] = new Array(cols);\n}\n\n// generate random values for relative humidity, temperature, and heat sink\nvar humidity = parseFloat((Math.random() * (maxHumidity - minHumidity + 1)) + minHumidity).toFixed(2);\nvar temperature = parseFloat((Math.random() * (maxTemperature - minTemperature + 1)) + minTemperature).toFixed(2);\n\n// generate random temperature readings for each element in the array\nfor (var i = 0; i < rows; i++) {\n    for (var j = 0; j < cols; j++) {\n        var temp = parseFloat((Math.random() * (maxThermalArray - minThermalArray + 1)) + minThermalArray).toFixed(1);\n        tempArray[i][j] = temp;\n    }\n}\nvar sumtempArray = [].concat.apply([], tempArray);\n\n// create the message object to be sent to the next node\nmsg.payload = {\n    Node_ID: nodeID,\n    Humidity: humidity,\n    Temperature: temperature,\n    ThermalArray: tempArray\n};\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 430,
+        "y": 480,
+        "wires": [
+            [
+                "ebaecfe300795f80",
+                "d64aa123dd89d982"
+            ]
+        ]
+    },
+    {
+        "id": "5c51daa720a88a69",
+        "type": "inject",
+        "z": "f0294b894a90b4d7",
+        "name": "Publish ",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 230,
+        "y": 480,
+        "wires": [
+            [
+                "dd623532f322b91f"
+            ]
+        ]
+    },
+    {
+        "id": "333ed8588559f654",
+        "type": "mqtt in",
+        "z": "f0294b894a90b4d7",
+        "name": "Hivemq Broker",
+        "topic": "PC/pub1",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "d17c3dc1cf4d3d03",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 680,
+        "y": 540,
+        "wires": [
+            [
+                "d1f28e3f5f53ff30"
+            ]
+        ]
+    },
+    {
+        "id": "d1f28e3f5f53ff30",
+        "type": "function",
+        "z": "f0294b894a90b4d7",
+        "name": "Send data to database",
+        "func": "var test = msg.payload;\nvar Node_ID = test;\nvar Humidity = test;\nvar Temperature = test;\nvar ThermalArray = test;\n\nmsg.topic = \"INSERT INTO recieve_input(Node_Id, Humidity, Temperature, ThermalArray)\" +\n    \"VALUES ('\" + msg.payload.Node_ID + \"','\" + msg.payload.Humidity + \"','\" + msg.payload.Temperature + \"','\" + msg.payload.ThermalArray + \"');\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 920,
+        "y": 540,
+        "wires": [
+            [
+                "a5bc6ac0908a8df2"
+            ]
+        ]
+    },
+    {
+        "id": "9e0e8c3ce7a981cd",
+        "type": "inject",
+        "z": "f0294b894a90b4d7",
+        "name": "CRATE TABLE",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "CREATE TABLE recieve_input(   No int NOT NULL AUTO_INCREMENT PRIMARY KEY,   Node_Id int  DEFAULT NULL,   Time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,   Humidity VARCHAR(255)  DEFAULT NULL,   Temperature VARCHAR(255) DEFAULT NULL,   ThermalArray VARCHAR(255)  DEFAULT NULL  )",
+        "payload": "",
+        "payloadType": "date",
+        "x": 260,
+        "y": 260,
+        "wires": [
+            [
+                "21936377bd9c43a7"
+            ]
+        ]
+    },
+    {
+        "id": "a579abac5ce2ccb6",
+        "type": "function",
+        "z": "f0294b894a90b4d7",
+        "name": "input_data",
+        "func": "var minThermalArray = 5;\nvar maxThermalArray = 60;\nvar minHumidity = 0;\nvar maxHumidity = 100;\nvar minTemperature = 0;\nvar maxTemperature = 90;\nvar rows = 24;\nvar cols = 32;\nconst nodeID = 1\n// create the 2D array to store temperature readings\nvar tempArray = new Array(rows);\nfor (var i = 0; i < rows; i++) {\n    tempArray[i] = new Array(cols);\n}\n\n// generate random values for relative humidity, temperature, and heat sink\nvar humidity = parseFloat((Math.random() * (maxHumidity - minHumidity + 1)) + minHumidity).toFixed(2);\nvar temperature = parseFloat((Math.random() * (maxTemperature - minTemperature + 1)) + minTemperature).toFixed(2);\n\n// generate random temperature readings for each element in the array\nfor (var i = 0; i < rows; i++) {\n    for (var j = 0; j < cols; j++) {\n        var temp = parseFloat((Math.random() * (maxThermalArray - minThermalArray + 1)) + minThermalArray).toFixed(1);\n        tempArray[i][j] = temp;\n    }\n}\nvar sumtempArray = [].concat.apply([], tempArray);\n\n// create the message object to be sent to the next node\nmsg.payload = {\n    Node_ID: nodeID,\n    Humidity: humidity,\n    Temperature: temperature,\n    ThermalArray: tempArray\n};\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 430,
+        "y": 380,
+        "wires": [
+            [
+                "d64aa123dd89d982",
+                "de0e1c310e768c75"
+            ]
+        ]
+    },
+    {
+        "id": "b590c32d3960f31b",
+        "type": "inject",
+        "z": "f0294b894a90b4d7",
+        "name": "Publish ",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "180",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 240,
+        "y": 380,
+        "wires": [
+            [
+                "a579abac5ce2ccb6"
+            ]
+        ]
+    },
+    {
+        "id": "de0e1c310e768c75",
+        "type": "debug",
+        "z": "f0294b894a90b4d7",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 640,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "a5bc6ac0908a8df2",
+        "type": "mysql",
+        "z": "f0294b894a90b4d7",
+        "mydb": "e0550ee1d648e822",
+        "name": "",
+        "x": 1140,
+        "y": 540,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "21936377bd9c43a7",
+        "type": "mysql",
+        "z": "f0294b894a90b4d7",
+        "mydb": "e0550ee1d648e822",
+        "name": "",
+        "x": 480,
+        "y": 260,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "d17c3dc1cf4d3d03",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "broker.hivemq.com",
+        "port": "1883",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "e0550ee1d648e822",
+        "type": "MySQLdatabase",
+        "name": "Database",
+        "host": "localhost",
+        "port": "3306",
+        "db": "test",
+        "tz": "",
+        "charset": "UTF8"
+    }
+]
