@@ -54,6 +54,7 @@ def subscribe(client: mqtt_client):
         #Method to chek all data will receive and send to database
         if(len(final)>=4):
             database(final)
+            final.clear()
 
     client.subscribe(mqtt_topic)
     client.on_message = on_message
