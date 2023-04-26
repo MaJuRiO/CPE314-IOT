@@ -1,4 +1,4 @@
-# CPE314-IOT
+# CPE314-IOT:Computer Networks
 Project CPE314 IOT
 IOT will have 4 parts that is Client, Broker, Server and Database. Client will send data to Broker. Then Broker will send data to Server. Finally, Server will send data to create table in Database to save all data.
 
